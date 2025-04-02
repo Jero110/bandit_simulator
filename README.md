@@ -6,7 +6,7 @@
 </head>
   
   
-clave unica ______________________________  
+clave unica __206002____________________________  
 
 # Problema de Multi-Bandas (Multi-Armed Bandit): Teoría e Implementación
 
