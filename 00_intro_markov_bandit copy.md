@@ -1,6 +1,6 @@
 
   
-clave unica ______________________________  
+clave unica __206002___201895_____205597___________________  
 
 # Bandidos de Markov de Dos Brazos  
 Una **Guía Paso a Paso** para Modelar, Problemas de Decisión Básicos y Variaciones  
@@ -330,17 +330,17 @@ Un ingrediente **clave** en bandidos de Markov de dos brazos con bono de explora
 
 A continuación, se presenta un **nuevo escenario** aplicado a cada uno de los **cuatro problemas básicos** (de las Secciones 3.2–3.3 del texto principal). La **única** modificación es:
 
-> **Al comienzo de cada turno, el agente puede elegir exactamente una máquina y obtener su **probabilidad actual de ganar** (es decir, la probabilidad de que proporcione un “éxito” o recompensa “1” en ese turno). Tras ver esa probabilidad (solo para una máquina), el agente decide cuál brazo jalar en ese turno.**
+> **Al comienzo de cada turno, el agente puede elegir exactamente una máquina y obtener su **probabilidad actual de ganar** (es decir, la probabilidad de que proporcione un "éxito" o recompensa "1" en ese turno). Tras ver esa probabilidad (solo para una máquina), el agente decide cuál brazo jalar en ese turno.**
 
 Todos los demás aspectos (conocimiento de matrices de transición, estados ocultos u observados, tipo de horizonte, bono de exploración, etc.) siguen como se definieron originalmente en cada problema básico.  
 
 Tu **tarea** es **reformular y especificar completamente** cada uno de los cuatro problemas básicos **bajo esta nueva opción de consulta**. Es decir, debes:
 
-1. **Definir el espacio de estados, acciones, transiciones, observaciones y objetivo** exactamente como antes, *pero* con la acción/observación adicional de que en cada turno puedes solicitar la “probabilidad actual de ganar” de una máquina.  
+1. **Definir el espacio de estados, acciones, transiciones, observaciones y objetivo** exactamente como antes, *pero* con la acción/observación adicional de que en cada turno puedes solicitar la "probabilidad actual de ganar" de una máquina.  
 2. **Aclarar** cómo encaja esta probabilidad recién revelada en el conocimiento o la actualización de creencias del agente.  
 3. **Explicar** (de manera breve y rigurosa) cómo el problema sigue siendo el mismo en los demás aspectos (p. ej., qué matrices de transición son conocidas vs. desconocidas, cómo se maneja el horizonte, y cómo se aplica el bono de exploración).
 
-Finalmente, para cada problema, **añade una breve “pregunta de intuición”** que te invite a reflexionar sobre cómo esta pieza extra de información podría influir en la estrategia o el desempeño del agente. **No** se requiere proporcionar ni intentar una solución completa—solo formular el problema revisado y plantear la pregunta de intuición.
+Finalmente, para cada problema, **añade una breve "pregunta de intuición"** que te invite a reflexionar sobre cómo esta pieza extra de información podría influir en la estrategia o el desempeño del agente. **No** se requiere proporcionar ni intentar una solución completa—solo formular el problema revisado y plantear la pregunta de intuición.
 
 ---
 
@@ -360,27 +360,50 @@ Finalmente, para cada problema, **añade una breve “pregunta de intuición”*
 - **Reformula el Problema**:  
   1. **Espacio de Estados / Transiciones**: Igual que antes; el estado de cada brazo evoluciona de manera **conocida** e independiente.  
   2. **Acciones**: Ahora se dividen en dos fases cada turno:  
-     - **Fase de Consulta** (opcional pero puede hacerse una vez por turno): El agente especifica el brazo 1 o 2 para “ver” su probabilidad de éxito.  
-     - **Fase de Elección**: Después, el agente elige qué brazo jalar y recibe la recompensa correspondiente (más el bono de exploración).  
+     - **Fase de Consulta**: El agente elige un brazo $C_t \in \{1,2\}$ para conocer su probabilidad actual de éxito.  
+     - **Fase de Selección**: Después, el agente elige qué brazo jalar $A_t \in \{1,2\}$ y recibe la recompensa correspondiente (más el bono de exploración).  
   3. **Observaciones**:  
-     - A partir de la **consulta**, el agente ve la probabilidad de éxito del brazo elegido para esa consulta.  
-     - Al jalar un brazo, el agente observa la recompensa (binaria o de otro tipo).  
-  4. **Objetivo**: Maximizar $\displaystyle \mathbb{E}\bigl[\sum_{t=1}^T (R_t + \beta\,B_t)\bigr]$ sobre todas las políticas que pueden usar el resultado de la consulta.  
-
-- **Pregunta de Intuición**:  
-  *¿De qué manera disponer de la probabilidad exacta de éxito de un brazo cada turno influiría en la decisión de qué máquina jalar?*  
+     - A partir de la **consulta**, el agente observa $p_t^{(C_t)}$, la probabilidad de éxito del brazo elegido.  
+     - Al jalar un brazo, el agente observa la recompensa $R_t \sim \text{Bernoulli}(p_t^{(A_t)})$.  
+  4. **Actualización de Creencias**:
+     - El agente actualiza su distribución de creencia sobre los estados $X_t = (X_t^{(1)}, X_t^{(2)})$ utilizando:
+       * La dinámica de transición conocida
+       * La probabilidad revelada $p_t^{(C_t)} = f(X_t^{(C_t)})$ (donde $f$ es conocida)
+       * La recompensa observada del brazo jalado
+  5. **Objetivo**: Maximizar $\displaystyle \mathbb{E}\bigl[\sum_{t=1}^T (R_t + \beta\,B_t)\bigr]$ sobre todas las políticas que pueden usar el resultado de la consulta.  
 
 **Definición del Problema**
-```
 
+Formalmente, el problema se define como:
 
-```
+1. **Espacio de Estados**:
+   - Cada brazo i tiene un estado X_t^(i) ∈ {1,...,n_i}
+   - Estados ocultos: X_t = (X_t^(1), X_t^(2))
+   - Matrices de transición P_i conocidas para cada brazo
+
+2. **Acciones**:
+   - Consulta: C_t ∈ {1,2} (elegir qué brazo consultar)
+   - Jalar: A_t ∈ {1,2} (elegir qué brazo jalar)
+
+3. **Observaciones**:
+   - p_t^(C_t): probabilidad de éxito del brazo consultado
+   - R_t: recompensa del brazo jalado (Bernoulli con prob p_t^(A_t))
+
+4. **Dinámica**:
+   - Estados evolucionan según P_i independientemente
+   - p_t^(i) = f(X_t^(i)) para alguna función f conocida
+   - R_t ~ Bernoulli(p_t^(A_t))
+
+5. **Objetivo**:
+   max_{π} E[∑_{t=1}^T (R_t + βB_t)]
+   donde π es una política que mapea (historial, p_t^(C_t)) → (C_t, A_t)
+
 
 **Pregunta de Intuición**
 ```
-
-
+¿Cuándo debería el agente consultar un brazo distinto al que planea jalar? ¿Existe algún escenario donde conocer la probabilidad de éxito de un brazo te llevaría a elegir el otro brazo, incluso si la probabilidad revelada es alta?
 ```
+
 ---
 
 ### **Ejercicio 6.2: Problema Básico 2**  
@@ -399,27 +422,49 @@ Finalmente, para cada problema, **añade una breve “pregunta de intuición”*
 - **Reformula el Problema**:  
   1. **Espacio de Estados / Transiciones**: Misma estructura de estados ocultos, pero las transiciones son desconocidas y deben inferirse.  
   2. **Acciones**:  
-     - **Consultar** el brazo 1 o el brazo 2 para ver su probabilidad de éxito en ese turno.  
-     - Luego **jalar** un brazo y obtener la recompensa habitual más el bono de exploración.  
+     - **Consulta** $C_t \in \{1,2\}$: El agente elige un brazo para conocer su probabilidad actual.
+     - **Selección** $A_t \in \{1,2\}$: Luego elige un brazo para jalar y recibe la recompensa habitual más el bono.
   3. **Observaciones**:  
-     - La probabilidad de éxito del brazo consultado.  
-     - La recompensa del brazo elegido al final del turno.  
-  4. **Objetivo**: Maximizar $\displaystyle \mathbb{E}\bigl[\sum_{t=1}^T (R_t + \beta\,B_t)\bigr]$ mientras se actualizan las creencias sobre las matrices de transición desconocidas, usando potencialmente la consulta para reducir incertidumbre.  
-
-- **Pregunta de Intuición**:  
-  *Dado que las transiciones son desconocidas, ¿cómo podría conocer la probabilidad exacta de ganar para un brazo en cada turno acelerar tu estimación de su dinámica de transición—o se usaría principalmente para explotar a corto plazo?*  
+     - La probabilidad de éxito $p_t^{(C_t)}$ del brazo consultado.
+     - La recompensa $R_t$ del brazo elegido al final del turno.  
+  4. **Actualización de Creencias**:
+     - El agente mantiene distribuciones de probabilidad sobre:
+       * Las matrices de transición desconocidas $P_i$ (ej. priors Dirichlet)
+       * Los estados actuales de los brazos
+     - La consulta proporciona información directa sobre el estado del brazo, lo que ayuda a refinar las estimaciones de las matrices de transición
+  5. **Objetivo**: Maximizar $\displaystyle \mathbb{E}\bigl[\sum_{t=1}^T (R_t + \beta\,B_t)\bigr]$ mientras se actualizan las creencias sobre las matrices de transición desconocidas, usando potencialmente la consulta para reducir incertidumbre.  
 
 **Definición del Problema**
-```
 
+Formalmente, el problema se define como:
 
-```
+1. **Espacio de Estados**:
+   - Estados ocultos X_t = (X_t^(1), X_t^(2))
+   - Matrices de transición P_i desconocidas
+   - Prior sobre P_i (ej: Dirichlet)
+
+2. **Acciones**:
+   - Consulta: C_t ∈ {1,2}
+   - Jalar: A_t ∈ {1,2}
+
+3. **Observaciones**:
+   - p_t^(C_t): probabilidad actual de éxito del brazo consultado
+   - R_t: recompensa del brazo jalado
+
+4. **Dinámica**:
+   - Estados evolucionan según P_i desconocidas
+   - p_t^(i) = f(X_t^(i)) para f conocida
+   - R_t ~ Bernoulli(p_t^(A_t))
+
+5. **Objetivo**:
+   max_{π} E[∑_{t=1}^T (R_t + βB_t)]
+   donde π actualiza creencias sobre P_i usando p_t^(C_t)
 
 **Pregunta de Intuición**
 ```
-
-
+¿Cómo usarías la información de la probabilidad actual de éxito para actualizar tus estimaciones de las matrices de transición? ¿Sería más valioso consultar el mismo brazo repetidamente para construir un modelo más preciso de su dinámica, o alternar consultas entre ambos brazos?
 ```
+
 ---
 
 ### **Ejercicio 6.3: Problema Básico 3**  
@@ -438,27 +483,51 @@ Finalmente, para cada problema, **añade una breve “pregunta de intuición”*
 - **Reformula el Problema**:  
   1. **Espacio de Estados / Transiciones**: La misma cadena de Markov conjunta, **conocida**.  
   2. **Acciones**:  
-     - **Consultar** la probabilidad de éxito de uno de los dos brazos.  
-     - **Jalar** un brazo y obtener la recompensa más el bono de exploración.  
+     - **Consulta** $C_t \in \{1,2\}$: Elegir un brazo para conocer su probabilidad actual de éxito.
+     - **Selección** $A_t \in \{1,2\}$: Elegir qué brazo jalar después de la consulta.
   3. **Observaciones**:  
-     - La probabilidad de éxito del brazo consultado (lo que podría brindar información parcial sobre el estado conjunto).  
-     - La recompensa del brazo seleccionado.  
-  4. **Objetivo**: Maximizar $\displaystyle \sum_{t=1}^T (R_t + \beta\,B_t)$ en esperanza, considerando las transiciones conjuntas y la información adicional de la consulta.  
-
-- **Pregunta de Intuición**:  
-  *¿Cómo podría revelar la probabilidad de éxito de un brazo proporcionar información sobre el otro brazo, dada la correlación en las transiciones?*  
+     - La probabilidad de éxito $p_t^{(C_t)}$ del brazo consultado (proporciona información parcial sobre el estado conjunto).
+     - La recompensa $R_t$ del brazo seleccionado.  
+  4. **Actualización de Creencias**:
+     - El agente actualiza su distribución de creencia sobre el estado conjunto $X_t$ utilizando:
+       * La matriz de transición conjunta conocida
+       * La probabilidad revelada del brazo consultado
+       * La recompensa observada
+     - Debido a la correlación, consultar un brazo proporciona información indirecta sobre el otro brazo
+  5. **Objetivo**: Maximizar $\displaystyle \sum_{t=1}^T (R_t + \beta\,B_t)$ en esperanza, considerando las transiciones conjuntas y la información adicional de la consulta.  
 
 **Definición del Problema**
-```
 
+Formalmente, el problema se define como:
 
-```
+1. **Espacio de Estados**:
+   - Estado conjunto X_t = (X_t^(1), X_t^(2))
+   - Matriz de transición conjunta P conocida
+   - |X| = |X^(1)| × |X^(2)| estados posibles
+
+2. **Acciones**:
+   - Consulta: C_t ∈ {1,2}
+   - Jalar: A_t ∈ {1,2}
+
+3. **Observaciones**:
+   - p_t^(C_t): probabilidad de éxito del brazo consultado
+   - R_t: recompensa del brazo jalado
+
+4. **Dinámica**:
+   - X_{t+1} ~ P(·|X_t, A_t)
+   - p_t^(i) = f(X_t^(i))
+   - R_t ~ Bernoulli(p_t^(A_t))
+
+5. **Objetivo**:
+   max_{π} E[∑_{t=1}^T (R_t + βB_t)]
+   donde π usa p_t^(C_t) para actualizar creencia sobre X_t
+
 
 **Pregunta de Intuición**
 ```
-
-
+Si consultas un brazo y ves que tiene una probabilidad de éxito muy alta, ¿cómo afectaría esto a tu creencia sobre el estado del otro brazo? ¿Cómo utilizarías la correlación entre estados para decidir qué brazo consultar en cada turno?
 ```
+
 ---
 
 ### **Ejercicio 6.4: Problema Básico 4**  
@@ -470,33 +539,65 @@ Finalmente, para cada problema, **añade una breve “pregunta de intuición”*
   3. Se sigue añadiendo $\beta\,B_t$ en cada paso, y las creencias deben actualizarse al estilo **POMDP**.
 
 - **Nueva Modificación**:  
-  En cada turno, el agente puede consultar **un** brazo para saber su probabilidad de éxito actual. Esta observación adicional podría reducir la observabilidad parcial en cada turno, pero solo para el brazo consultado.
+  En cada turno, el agente puede consultar **un** brazo para saber su probabilidad de éxito actual. Esta observación adicional podría reducir la incertidumbre del estado parcialmente observable en cada turno, pero solo para el brazo consultado.
 
 - **Reformula el Problema**:  
-  1. **Espacio de Estados / Transiciones**: Los estados ocultos y transiciones siguen como en el Problema 4 original. Pueden ser conocidos o desconocidos, posiblemente correlacionados, con horizonte aleatorio o infinito.  
+  1. **Espacio de Estados / Transiciones**: Los estados ocultos y transiciones siguen como en el Problema 4 original.  
   2. **Acciones**:  
-     - **Consultar** la probabilidad de éxito de un brazo.  
-     - **Jalar** el brazo 1 o 2, observando la recompensa más el bono de exploración.  
-     - Posiblemente continuar hasta un tiempo de parada aleatorio o indefinidamente (si el horizonte es infinito).  
+     - **Consulta** $C_t \in \{1,2\}$: Elegir un brazo para conocer su probabilidad actual de éxito.
+     - **Selección** $A_t \in \{1,2\}$: Elegir qué brazo jalar después de la consulta.  
+     - El horizonte puede ser fijo, aleatorio o infinito según la variante específica.
   3. **Observaciones**:  
-     - Si las transiciones son conocidas, la consulta ayuda a localizar el estado oculto.  
-     - Si son desconocidas, ayuda a refinar los parámetros o estados de creencia.  
-  4. **Objetivo**: **Maximizar** la recompensa acumulada esperada (más los bonos) en un horizonte aleatorio o infinito, considerando la observabilidad parcial y la nueva acción de consulta.  
-
-- **Pregunta de Intuición**:  
-  *¿Cómo prevés usar la consulta de probabilidad de éxito de un brazo en un entorno POMDP o con horizonte aleatorio? ¿Te permitiría explotar con más confianza un brazo prometedor o sería principalmente valiosa para refinar tu creencia a lo largo del tiempo?*  
+     - La probabilidad de éxito $p_t^{(C_t)}$ del brazo consultado.
+     - La recompensa $R_t$ del brazo seleccionado.
+     - Posiblemente otras señales adicionales $O_t$ dependiendo de la variante del problema.
+  4. **Actualización de Creencias**:
+     - El agente actualiza sus creencias sobre:
+       * Los estados actuales (distribución de creencia POMDP)
+       * Las matrices de transición (si son desconocidas)
+     - La consulta de probabilidad proporciona información adicional que reduce la incertidumbre del POMDP
+  5. **Objetivo**: **Maximizar** la recompensa acumulada esperada (más los bonos) en un horizonte que puede ser fijo, aleatorio o infinito.  
 
 **Definición del Problema**
-```
 
+Formalmente, el problema se define como:
 
-```
+1. **Espacio de Estados**:
+   - Estado X_t = (X_t^(1), X_t^(2))
+   - Transiciones P pueden ser:
+     * Conocidas o desconocidas
+     * Independientes o conjuntas
+   - Horizonte T puede ser:
+     * Fijo
+     * Aleatorio (distribución conocida)
+     * Infinito (con descuento γ)
+
+2. **Acciones**:
+   - Consulta: C_t ∈ {1,2}
+   - Jalar: A_t ∈ {1,2}
+
+3. **Observaciones**:
+   - p_t^(C_t): probabilidad actual de éxito
+   - R_t: recompensa del brazo jalado
+   - Posibles señales adicionales O_t
+
+4. **Dinámica**:
+   - X_{t+1} ~ P(·|X_t, A_t)
+   - p_t^(i) = f(X_t^(i))
+   - R_t ~ Bernoulli(p_t^(A_t))
+   - T puede ser aleatorio o ∞
+
+5. **Objetivo**:
+   max_{π} E[∑_{t=1}^T (R_t + βB_t)]
+   o
+   max_{π} E[∑_{t=1}^∞ γ^{t-1}(R_t + βB_t)]
+   donde π actualiza creencias usando p_t^(C_t)
 
 **Pregunta de Intuición**
 ```
-
-
+En un horizonte infinito o aleatorio, ¿cómo balancearías el valor a corto plazo de consultar el brazo con mayor recompensa esperada versus el valor a largo plazo de reducir la incertidumbre del sistema? ¿Cambiaría tu estrategia de consulta con el tiempo conforme aprendes más sobre el sistema?
 ```
+
 ---
 
 ## **7. Algoritmos de Inferencia de Estados y Decisión**  
